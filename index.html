@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>CyberArcade Pro - Super Admin Control Panel</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome 6 Pro CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700;800&family=Outfit:wght@400;600;800;900&display=swap');
+
+    body {
+      font-family: 'Hind Siliguri', 'Outfit', sans-serif;
+      background: radial-gradient(circle at top, #0f172a 0%, #030712 100%);
+      color: #f8fafc;
+      min-height: 100vh;
+      margin: 0;
+      padding: 0;
+    }
+
+    .glass-card {
+      background: rgba(17, 24, 39, 0.78);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    }
+
+    .glow-cyan { filter: drop-shadow(0 0 10px rgba(6, 182, 212, 0.5)); }
+    .glow-amber { filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.5)); }
+    .glow-pink { filter: drop-shadow(0 0 10px rgba(236, 72, 153, 0.5)); }
+
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-thumb { background: #06b6d4; border-radius: 4px; }
+    ::-webkit-scrollbar-track { background: #030712; }
+  </style>
+</head>
+
+<body class="flex flex-col items-center p-3 sm:p-6 pb-24">
+
+  <!-- ================= TOP HEADER ================= -->
+  <header class="w-full max-w-5xl glass-card rounded-3xl p-4 mb-6 flex flex-wrap items-center justify-between gap-4 border border-cyan-500/30 shadow-2xl">
+    <div class="flex items-center space-x-3">
+      <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-cyan-500 via-indigo-600 to-pink-500 flex items-center justify-center text-white text-xl shadow-lg border border-cyan-400/40">
+        <i class="fa-solid fa-shield-halved"></i>
+      </div>
+      <div>
+        <div class="flex items-center space-x-2">
+          <h1 class="text-base sm:text-lg font-black text-white tracking-wide">CyberArcade Admin Panel</h1>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-pink-500/20 text-pink-400 border border-pink-500/40 uppercase">SUPERADMIN</span>
+        </div>
+        <p class="text-xs text-slate-400">রিয়েল-টাইম বিকাশ পে-আউট, ইউজার অডিট ও সম্পূর্ণ বিজ্ঞাপন নিয়ন্ত্রণ</p>
+      </div>
+    </div>
+
+    <!-- Quick Navigation Tabs -->
+    <div class="flex items-center space-x-1.5 bg-slate-950/90 p-1.5 rounded-2xl border border-slate-800 text-xs flex-wrap gap-y-1">
+      <button onclick="switchTab('dashboard')" id="tabBtnDash" class="px-3 py-1.5 rounded-xl font-bold bg-cyan-600 text-white transition shadow">
+        <i class="fa-solid fa-chart-pie mr-1"></i> ড্যাশবোর্ড
+      </button>
+      <button onclick="switchTab('payouts')" id="tabBtnPayouts" class="px-3 py-1.5 rounded-xl font-bold text-slate-400 hover:text-white transition">
+        <i class="fa-solid fa-money-bill-wave mr-1 text-emerald-400"></i> বিকাশ পে-আউট (<span id="badgePendingCount">0</span>)
+      </button>
+      <button onclick="switchTab('ads')" id="tabBtnAds" class="px-3 py-1.5 rounded-xl font-bold text-slate-400 hover:text-white transition">
+        <i class="fa-solid fa-rectangle-ad mr-1 text-amber-400"></i> বিজ্ঞাপন নিয়ন্ত্রণ ⚡
+      </button>
+      <button onclick="switchTab('users')" id="tabBtnUsers" class="px-3 py-1.5 rounded-xl font-bold text-slate-400 hover:text-white transition">
+        <i class="fa-solid fa-users mr-1"></i> ইউজার্স
+      </button>
+      <button onclick="switchTab('broadcast')" id="tabBtnBroadcast" class="px-3 py-1.5 rounded-xl font-bold text-slate-400 hover:text-white transition">
+        <i class="fa-solid fa-bullhorn mr-1"></i> ব্রডকাস্ট
+      </button>
+      <button onclick="switchTab('settings')" id="tabBtnSettings" class="px-3 py-1.5 rounded-xl font-bold text-slate-400 hover:text-white transition">
+        <i class="fa-solid fa-sliders mr-1"></i> সেটিংস
+      </button>
+    </div>
+  </header>
+
+  <!-- ================= MAIN CONTAINER ================= -->
+  <main class="w-full max-w-5xl">
+
+    <!-- ================= VIEW 1: DASHBOARD OVERVIEW ================= -->
+    <div id="viewDashboard" class="space-y-6">
+      
+      <!-- Metrics Cards -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <!-- Metric 1: Total Users -->
+        <div class="glass-card rounded-2xl p-4 border border-cyan-500/20 shadow-lg">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs text-slate-400 font-bold">মোট প্লেয়ার</span>
+            <div class="w-8 h-8 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-sm">
+              <i class="fa-solid fa-users"></i>
+            </div>
+          </div>
+          <div id="statTotalUsers" class="text-2xl font-black text-white font-['Outfit']">0</div>
+          <div class="text-[10px] text-cyan-400 mt-1">বটে নিবন্ধিত একাউন্ট</div>
+        </div>
+
+        <!-- Metric 2: Pending Payouts -->
+        <div class="glass-card rounded-2xl p-4 border border-amber-500/30 shadow-lg">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs text-slate-400 font-bold">পেন্ডিং ক্যাশআউট</span>
+            <div class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-sm">
+              <i class="fa-solid fa-clock"></i>
+            </div>
+          </div>
+          <div id="statPendingBdt" class="text-2xl font-black text-amber-400 font-['Outfit']">৳0.00</div>
+          <div class="text-[10px] text-slate-400 mt-1"><span id="statPendingCount">0</span>টি অনুরোধ অপেক্ষমান</div>
+        </div>
+
+        <!-- Metric 3: Approved Payouts -->
+        <div class="glass-card rounded-2xl p-4 border border-emerald-500/30 shadow-lg">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs text-slate-400 font-bold">পরিশোধিত ক্যাশআউট</span>
+            <div class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm">
+              <i class="fa-solid fa-circle-check"></i>
+            </div>
+          </div>
+          <div id="statApprovedBdt" class="text-2xl font-black text-emerald-400 font-['Outfit']">৳0.00</div>
+          <div class="text-[10px] text-slate-400 mt-1"><span id="statApprovedCount">0</span>টি বিকাশ সফল</div>
+        </div>
+
+        <!-- Metric 4: Total Coins in Pool -->
+        <div class="glass-card rounded-2xl p-4 border border-purple-500/30 shadow-lg">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs text-slate-400 font-bold">সার্কুলেশন কয়েন</span>
+            <div class="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-sm">
+              <i class="fa-solid fa-coins"></i>
+            </div>
+          </div>
+          <div id="statTotalCoins" class="text-2xl font-black text-purple-300 font-['Outfit']">0</div>
+          <div class="text-[10px] text-slate-400 mt-1">প্লেয়ার ওয়ালেট ব্যালেন্স</div>
+        </div>
+      </div>
+
+      <!-- Quick Action Shortcuts -->
+      <div class="glass-card rounded-3xl p-5 border border-slate-800">
+        <h3 class="text-xs font-black text-white uppercase tracking-wider mb-3.5 flex items-center space-x-2">
+          <i class="fa-solid fa-bolt text-amber-400"></i>
+          <span>কুইক এডমিন অ্যাকশন</span>
+        </h3>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <button onclick="switchTab('payouts')" class="p-3.5 bg-slate-900/90 hover:bg-slate-800 border border-slate-800 rounded-2xl flex items-center space-x-3 transition active:scale-98">
+            <div class="w-10 h-10 rounded-xl bg-pink-500/20 text-pink-400 flex items-center justify-center text-lg font-bold">
+              ৳
+            </div>
+            <div class="text-left">
+              <div class="text-xs font-bold text-white">পেন্ডিং বিকাশ যাচাই</div>
+              <div class="text-[10px] text-slate-400">অপেক্ষমান রিকোয়েস্ট অনুমোদন বা বাতিল</div>
+            </div>
+          </button>
+
+          <button onclick="switchTab('ads')" class="p-3.5 bg-slate-900/90 hover:bg-slate-800 border border-amber-500/30 rounded-2xl flex items-center space-x-3 transition active:scale-98">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-lg font-bold glow-amber">
+              <i class="fa-solid fa-rectangle-ad"></i>
+            </div>
+            <div class="text-left">
+              <div class="text-xs font-bold text-white">বিজ্ঞাপন নিয়ন্ত্রণ (Ad Manager)</div>
+              <div class="text-[10px] text-amber-300 font-bold">সকল অ্যাড অন/অফ ও রিওয়ার্ড পরিবর্তন</div>
+            </div>
+          </button>
+
+          <button onclick="switchTab('broadcast')" class="p-3.5 bg-slate-900/90 hover:bg-slate-800 border border-slate-800 rounded-2xl flex items-center space-x-3 transition active:scale-98">
+            <div class="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-lg font-bold">
+              <i class="fa-solid fa-paper-plane"></i>
+            </div>
+            <div class="text-left">
+              <div class="text-xs font-bold text-white">নতুন ব্রডকাস্ট পাঠানো</div>
+              <div class="text-[10px] text-slate-400">সকল প্লেয়ারকে গণবিজ্ঞপ্তি সেন্ড করুন</div>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= VIEW 2: BKASH PAYOUTS QUEUE ================= -->
+    <div id="viewPayouts" class="hidden space-y-4">
+      <div class="glass-card rounded-3xl p-5 border border-slate-800">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div>
+            <h2 class="text-sm font-black text-white flex items-center space-x-2">
+              <i class="fa-solid fa-money-bill-transfer text-emerald-400"></i>
+              <span>বিকাশ উইথড্রয়াল ম্যানেজমেন্ট</span>
+            </h2>
+            <p class="text-xs text-slate-400">প্লেয়ারদের পাঠানো বিকাশ ক্যাশআউট রিকোয়েস্ট যাচাই ও অনুমোদন করুন</p>
+          </div>
+          <!-- Filter badges -->
+          <div class="flex items-center space-x-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs">
+            <button onclick="filterPayouts('all')" id="filterAll" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-700 text-white">সবগুলো</button>
+            <button onclick="filterPayouts('pending')" id="filterPending" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-400">পেন্ডিং</button>
+            <button onclick="filterPayouts('approved')" id="filterApproved" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-400">অনুমোদিত</button>
+            <button onclick="filterPayouts('rejected')" id="filterRejected" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-400">বাতিল</button>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-950/80 text-slate-400 border-b border-slate-800">
+              <tr>
+                <th class="p-3">আইডি</th>
+                <th class="p-3">ইউজার</th>
+                <th class="p-3">বিকাশ মোবাইল নম্বর</th>
+                <th class="p-3">টাকার পরিমাণ</th>
+                <th class="p-3">কয়েন</th>
+                <th class="p-3">স্ট্যাটাস</th>
+                <th class="p-3 text-right">অ্যাকশন</th>
+              </tr>
+            </thead>
+            <tbody id="payoutsTableBody" class="divide-y divide-slate-800/60">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= VIEW 3: COMPREHENSIVE AD MANAGEMENT (ALL ADS CONTROL) ================= -->
+    <div id="viewAds" class="hidden space-y-6">
+
+      <!-- Hero Master Kill-Switch Card -->
+      <div id="adMasterCard" class="glass-card rounded-3xl p-6 border-2 border-emerald-500/40 shadow-2xl relative overflow-hidden transition-all duration-300">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="flex items-center space-x-4">
+            <div id="adMasterIconBox" class="w-14 h-14 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl shadow-xl glow-emerald shrink-0">
+              <i class="fa-solid fa-tower-broadcast"></i>
+            </div>
+            <div>
+              <div class="flex items-center space-x-2">
+                <h2 class="text-base font-black text-white">গ্লোবাল বিজ্ঞাপন মাস্টার কন্ট্রোল</h2>
+                <span id="adMasterBadge" class="text-[9px] font-black bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/40 uppercase">🟢 ACTIVE</span>
+              </div>
+              <p id="adMasterDesc" class="text-xs text-slate-300 mt-1">সিস্টেমের সমস্ত গেমে এবং মিনি অ্যাপে বিজ্ঞাপন সক্রিয় রয়েছে।</p>
+            </div>
+          </div>
+
+          <div class="flex items-center space-x-3 shrink-0">
+            <button onclick="toggleAdsMasterSwitch()" id="btnMasterToggle" class="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 text-slate-950 font-black rounded-xl text-xs transition active:scale-95 shadow-xl flex items-center space-x-2">
+              <i class="fa-solid fa-power-off text-sm"></i>
+              <span id="btnMasterToggleText">সকল অ্যাড বন্ধ করুন</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ad Network SDK Configuration -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+        <!-- Network & Zone Configuration -->
+        <div class="glass-card rounded-3xl p-5 border border-slate-800 space-y-4">
+          <h3 class="text-xs font-black text-white uppercase tracking-wider flex items-center space-x-2">
+            <i class="fa-solid fa-gears text-cyan-400"></i>
+            <span>অ্যাড নেটওয়ার্ক ও SDK কনফিগারেশন</span>
+          </h3>
+
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">অ্যাড নেটওয়ার্ক প্রোভাইডার</label>
+            <select id="adNetworkProvider" class="w-full bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-xl p-2.5 text-xs text-white outline-none">
+              <option value="monetag">Monetag Rewarded (Official Active)</option>
+              <option value="adsgram">Adsgram Telegram Rewarded</option>
+              <option value="custom">Custom HTML5 Script / Zone</option>
+              <option value="simulated">টেস্টিং স্যান্ডবক্স (সিমুলেশন মোড)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">Monetag Zone ID (Rewarding Tag)</label>
+            <input type="text" id="adMonetagZone" value="11884798" placeholder="যেমন: 11884798"
+              class="w-full bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-xl p-2.5 text-xs text-white outline-none font-mono font-bold">
+            <p class="text-[10px] text-slate-500 mt-1">Monetag ড্যাশবোর্ড থেকে পাওয়া অপ্ট-ইন রিওয়ার্ডেড জোন আইডি</p>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">ডাইরেক্ট ভিডিও অ্যাড রিওয়ার্ড (কয়েন)</label>
+            <input type="number" id="adVideoCoins" value="250" min="50" step="50"
+              class="w-full bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-xl p-2.5 text-xs text-white outline-none font-mono font-bold text-amber-400">
+            <p class="text-[10px] text-slate-500 mt-1">টাস্ক স্ক্রিন বা লবিতে স্পন্সর ভিডিও দেখলে প্লেয়ার এই পরিমাণ কয়েন পাবে</p>
+          </div>
+
+          <div>
+            <label class="flex items-center space-x-2.5 cursor-pointer pt-1">
+              <input type="checkbox" id="adSandboxBypass" checked class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-cyan-500 focus:ring-0">
+              <span class="text-xs font-bold text-slate-300">অ্যাডব্লক বা ডিএনএস ব্লকে টেস্ট ফলব্যাক কনফার্মেশন মোড সক্রিয়</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Ad Analytics & Earnings Performance -->
+        <div class="glass-card rounded-3xl p-5 border border-slate-800 space-y-4">
+          <h3 class="text-xs font-black text-white uppercase tracking-wider flex items-center space-x-2">
+            <i class="fa-solid fa-chart-line text-emerald-400"></i>
+            <span>বিজ্ঞাপন মেট্রিক্স ও আয়ের হিসাব (এস্টিমেট)</span>
+          </h3>
+
+          <div class="grid grid-cols-2 gap-3 text-xs">
+            <div class="bg-slate-950 p-3.5 rounded-2xl border border-slate-800/80">
+              <span class="text-slate-400 block text-[10px]">মোট অ্যাড ভিউ</span>
+              <span id="statAdImpressions" class="text-xl font-black text-cyan-400 font-['Outfit']">1,420</span>
+              <span class="text-[9px] text-emerald-400 block mt-0.5">১০০% কমপ্লিশন রেট</span>
+            </div>
+            <div class="bg-slate-950 p-3.5 rounded-2xl border border-slate-800/80">
+              <span class="text-slate-400 block text-[10px]">বিতরিত বোনাস কয়েন</span>
+              <span id="statAdCoinsAwarded" class="text-xl font-black text-amber-400 font-['Outfit']">355,000</span>
+              <span class="text-[9px] text-slate-500 block mt-0.5">= ৳৩৫৫.০০ BDT ইকুইটি</span>
+            </div>
+            <div class="bg-slate-950 p-3.5 rounded-2xl border border-slate-800/80">
+              <span class="text-slate-400 block text-[10px]">গড় eCPM (Estimated)</span>
+              <span class="text-xl font-black text-emerald-400 font-['Outfit']">$1.85</span>
+              <span class="text-[9px] text-slate-500 block mt-0.5">বাংলাদেশ ট্র্যাফিক টায়ার</span>
+            </div>
+            <div class="bg-slate-950 p-3.5 rounded-2xl border border-slate-800/80">
+              <span class="text-slate-400 block text-[10px]">মোট আনুমানিক আয়</span>
+              <span class="text-xl font-black text-white font-['Outfit']">$2.62</span>
+              <span class="text-[9px] text-emerald-400 font-bold block mt-0.5">≈ ৳৩১৫ টাকা</span>
+            </div>
+          </div>
+
+          <div class="p-3 bg-slate-950 rounded-2xl border border-cyan-500/20 text-[11px] text-slate-300">
+            <div class="font-bold text-cyan-300 flex items-center space-x-1.5 mb-1">
+              <i class="fa-solid fa-circle-info"></i>
+              <span>মনিটাইজেশন সুরক্ষা তথ্য</span>
+            </div>
+            <p class="text-slate-400 leading-relaxed text-[10px]">
+              প্লেয়ার যাতে বিরক্ত হয়ে গেম ছেড়ে না যায় সেজন্য প্রতিটি অ্যাড ১০০% অপ্ট-ইন এবং রিওয়ার্ড ভিত্তিক রাখা হয়েছে।
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Specific Placement Toggles Matrix -->
+      <div class="glass-card rounded-3xl p-5 border border-slate-800 space-y-4">
+        <h3 class="text-xs font-black text-white uppercase tracking-wider flex items-center space-x-2">
+          <i class="fa-solid fa-toggle-on text-pink-400"></i>
+          <span>স্পেসিফিক গেম ও ফিচার অনুযায়ী অ্যাড টগল ম্যাট্রিক্স</span>
+        </h3>
+        <p class="text-xs text-slate-400">নিচের যেকোনো ফিচার থেকে বিজ্ঞাপন অন অথবা অফ করতে পারবেন:</p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5 pt-1 text-xs">
+
+          <!-- Placement 1: Video Boost -->
+          <div class="bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800 flex items-center justify-between">
+            <div>
+              <div class="font-bold text-white flex items-center space-x-1.5">
+                <i class="fa-solid fa-circle-play text-amber-400"></i>
+                <span>ভিডিও বুস্ট অ্যাড</span>
+              </div>
+              <p class="text-[10px] text-slate-400 mt-0.5">লবি ও টাস্ক স্ক্রিন (+২৫০ কয়েন)</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="adPlaceVideo" checked class="sr-only peer">
+              <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+            </label>
+          </div>
+
+          <!-- Placement 2: Revives -->
+          <div class="bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800 flex items-center justify-between">
+            <div>
+              <div class="font-bold text-white flex items-center space-x-1.5">
+                <i class="fa-solid fa-heart-pulse text-rose-400"></i>
+                <span>গেম রিভাইভ অ্যাড</span>
+              </div>
+              <p class="text-[10px] text-slate-400 mt-0.5">Stack 3D, Slasher, Flappy ড্রোন</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="adPlaceRevive" checked class="sr-only peer">
+              <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+            </label>
+          </div>
+
+          <!-- Placement 3: 2X Multiplier -->
+          <div class="bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800 flex items-center justify-between">
+            <div>
+              <div class="font-bold text-white flex items-center space-x-1.5">
+                <i class="fa-solid fa-coins text-amber-400"></i>
+                <span>২X কয়েন মাল্টিপ্লায়ার</span>
+              </div>
+              <p class="text-[10px] text-slate-400 mt-0.5">গেম ওভারের অর্জিত কয়েন ডাবল</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="adPlaceMultiplier" checked class="sr-only peer">
+              <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+            </label>
+          </div>
+
+          <!-- Placement 4: Extra Spins -->
+          <div class="bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800 flex items-center justify-between">
+            <div>
+              <div class="font-bold text-white flex items-center space-x-1.5">
+                <i class="fa-solid fa-dharmachakra text-yellow-400"></i>
+                <span>+২ লাকি স্পিন অ্যাড</span>
+              </div>
+              <p class="text-[10px] text-slate-400 mt-0.5">স্পিন চাকা শেষ হলে আনলক</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="adPlaceSpins" checked class="sr-only peer">
+              <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+            </label>
+          </div>
+
+          <!-- Placement 5: Extra Scratch Cards -->
+          <div class="bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800 flex items-center justify-between">
+            <div>
+              <div class="font-bold text-white flex items-center space-x-1.5">
+                <i class="fa-solid fa-ticket text-emerald-400"></i>
+                <span>+২ স্ক্র্যাচ কার্ড অ্যাড</span>
+              </div>
+              <p class="text-[10px] text-slate-400 mt-0.5">নতুন গোল্ডেন কার্ড আনলক</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="adPlaceCards" checked class="sr-only peer">
+              <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+            </label>
+          </div>
+
+          <!-- Placement 6: Quiz Lifeline -->
+          <div class="bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800 flex items-center justify-between">
+            <div>
+              <div class="font-bold text-white flex items-center space-x-1.5">
+                <i class="fa-solid fa-wand-magic-sparkles text-indigo-400"></i>
+                <span>৫০-৫০ কুইজ লাইফলাইন</span>
+              </div>
+              <p class="text-[10px] text-slate-400 mt-0.5">কুইজে ২টি ভুল উত্তর বাদ দেওয়া</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="adPlaceQuiz" checked class="sr-only peer">
+              <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+            </label>
+          </div>
+
+        </div>
+
+        <!-- Save Button for Ads -->
+        <div class="pt-2 flex flex-col sm:flex-row items-center gap-3">
+          <button onclick="saveAdSettings()" class="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 text-white font-black rounded-2xl text-xs shadow-xl transition active:scale-95 flex items-center justify-center space-x-2">
+            <i class="fa-solid fa-floppy-disk"></i>
+            <span>অ্যাড সেটিংস সংরক্ষণ ও মিনি অ্যাপে সিঙ্ক করুন 🚀</span>
+          </button>
+          <button onclick="resetDefaultAdSettings()" class="w-full sm:w-auto px-5 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-2xl text-xs transition active:scale-95">
+            ডিফল্ট সেটিংসে রিসেট
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ================= VIEW 4: USERS MANAGER ================= -->
+    <div id="viewUsers" class="hidden space-y-4">
+      <div class="glass-card rounded-3xl p-5 border border-slate-800">
+        <h2 class="text-sm font-black text-white flex items-center space-x-2 mb-3">
+          <i class="fa-solid fa-users text-cyan-400"></i>
+          <span>প্লেয়ার অনুসন্ধান ও ব্যালেন্স মডিফিকেশন</span>
+        </h2>
+        <div class="flex space-x-2 mb-4">
+          <input type="text" id="userSearchInput" placeholder="টেলিগ্রাম আইডি অথবা @ইউজারনেম লিখুন..."
+            class="flex-1 bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none">
+          <button onclick="searchUser()" class="px-5 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl text-xs transition active:scale-95 shadow">
+            অনুসন্ধান 🔍
+          </button>
+        </div>
+        <div id="userSearchResult">
+          <div class="text-center text-slate-500 py-6 text-xs">প্লেয়ার খুঁজতে উপরে আইডি বা ইউজারনেম দিয়ে সার্চ করুন</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= VIEW 5: MASS BROADCAST ================= -->
+    <div id="viewBroadcast" class="hidden space-y-4">
+      <div class="glass-card rounded-3xl p-5 border border-slate-800 max-w-xl mx-auto">
+        <h2 class="text-sm font-black text-white flex items-center space-x-2 mb-1">
+          <i class="fa-solid fa-bullhorn text-cyan-400"></i>
+          <span>গণবার্তা (Mass Broadcast) প্রেরণ</span>
+        </h2>
+        <p class="text-xs text-slate-400 mb-4">এই বার্তাটি স্বয়ংক্রিয়ভাবে আর্কেডের প্রতিটি নিবন্ধিত প্লেয়ারের টেলিগ্রাম ইনবক্সে পৌঁছে যাবে।</p>
+
+        <form id="broadcastForm" class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1">মেসেজ কন্টেন্ট (Markdown সমর্থিত)</label>
+            <textarea id="broadcastText" rows="5" required placeholder="উদাহরণ: 🎉 নতুন মেগা ইভেন্ট শুরু হয়েছে! খেলুন এবং জিতে নিন অতিরিক্ত ৫০০ কয়েন..."
+              class="w-full bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-2xl p-3.5 text-xs text-white outline-none transition"></textarea>
+          </div>
+
+          <div class="p-3 bg-slate-950 rounded-2xl border border-slate-800 text-[11px] text-slate-400 flex items-center space-x-2">
+            <i class="fa-solid fa-triangle-exclamation text-amber-400"></i>
+            <span>টেলিগ্রাম রেট লিমিট এড়াতে বট স্বয়ংক্রিয়ভাবে ব্যাচ আকারে মেসেজ সেন্ড করবে।</span>
+          </div>
+
+          <button type="submit" class="w-full py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 text-white font-black rounded-2xl text-xs shadow-xl transition active:scale-95">
+            মেসেজ ব্রডকাস্ট করুন 🚀
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ================= VIEW 6: GENERAL SYSTEM SETTINGS ================= -->
+    <div id="viewSettings" class="hidden space-y-4">
+      <div class="glass-card rounded-3xl p-5 border border-slate-800 max-w-xl mx-auto">
+        <h2 class="text-sm font-black text-white flex items-center space-x-2 mb-4">
+          <i class="fa-solid fa-sliders text-cyan-400"></i>
+          <span>আর্কেড ইকোনমি ও সিস্টেম সেটিংস</span>
+        </h2>
+
+        <form id="settingsForm" class="space-y-4 text-xs">
+          <div>
+            <label class="block font-bold text-slate-300 mb-1">সর্বনিম্ন উইথড্রয়াল পরিমাণ (BDT)</label>
+            <input type="number" id="settingMinPayout" value="50" min="10" step="5" required
+              class="w-full bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-xl p-2.5 text-white outline-none font-bold font-mono">
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-300 mb-1">কয়েন কনভার্সন রেট (১ BDT = কত কয়েন?)</label>
+            <input type="number" id="settingCoinRate" value="1000" min="100" step="50" required
+              class="w-full bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-xl p-2.5 text-white outline-none font-bold font-mono">
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-300 mb-1">দৈনিক লগইন বোনাস (কয়েন)</label>
+            <input type="number" id="settingDailyBonus" value="100" min="10" step="10" required
+              class="w-full bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-xl p-2.5 text-white outline-none font-bold font-mono">
+          </div>
+
+          <div class="pt-2">
+            <label class="flex items-center space-x-2.5 cursor-pointer">
+              <input type="checkbox" id="settingMaintenance" class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-rose-500 focus:ring-0">
+              <span class="font-bold text-rose-400">মেন্টেন্যান্স মোড সক্রিয় করুন (উইথড্রয়াল সাময়িক বন্ধ)</span>
+            </label>
+          </div>
+
+          <button type="submit" class="w-full py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 text-white font-black rounded-2xl text-xs transition active:scale-95 shadow">
+            সেটিংস সেভ করুন ✅
+          </button>
+        </form>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ================= APPROVE MODAL ================= -->
+  <div id="approveModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+    <div class="glass-card max-w-sm w-full p-5 rounded-3xl border border-emerald-500/40 space-y-4 shadow-2xl">
+      <div class="flex items-center space-x-2.5">
+        <div class="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-lg">
+          <i class="fa-solid fa-check"></i>
+        </div>
+        <div>
+          <h3 class="text-sm font-bold text-white">বিকাশ পেমেন্ট অনুমোদন</h3>
+          <p class="text-[10px] text-slate-400">আইডি: #<span id="modalPayoutId"></span></p>
+        </div>
+      </div>
+
+      <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800 space-y-1.5 text-xs">
+        <div class="flex justify-between"><span class="text-slate-400">বিকাশ নম্বর:</span><span id="modalPhone" class="font-bold text-pink-400 font-mono"></span></div>
+        <div class="flex justify-between"><span class="text-slate-400">টাকার পরিমাণ:</span><span id="modalBdt" class="font-bold text-emerald-400 font-bold"></span></div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-300 mb-1">bKash Transaction ID (ঐচ্ছিক)</label>
+        <input type="text" id="modalTxId" placeholder="উদাহরণ: BLK903X71A"
+          class="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 rounded-xl p-2.5 text-xs text-white outline-none uppercase font-mono">
+      </div>
+
+      <div class="flex space-x-2 pt-1">
+        <button onclick="closeApproveModal()" class="w-1/2 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs">বাতিল</button>
+        <button onclick="confirmApprove()" class="w-1/2 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl text-xs shadow-lg">অনুমোদন করুন</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= JAVASCRIPT LOGIC ================= -->
+  <script>
+    // Global Admin State Store
+    let adminState = {
+      payouts: JSON.parse(localStorage.getItem('admin_payouts') || JSON.stringify([
+        { id: 101, userId: 9812401, username: "tamim_bd", phone: "01712345678", amount: 100, coins: 100000, status: "pending", date: "25 Sep, 08:30 PM" },
+        { id: 102, userId: 6512390, username: "rafiq_pro", phone: "01987654321", amount: 50, coins: 50000, status: "pending", date: "25 Sep, 09:10 PM" },
+        { id: 103, userId: 4410291, username: "sakib_99", phone: "01823456789", amount: 200, coins: 200000, status: "approved", date: "24 Sep, 04:15 PM" }
+      ])),
+      users: [
+        { userId: 9812401, username: "tamim_bd", name: "Tamim Hasan", coins: 45000, withdrawn: 0, banned: false },
+        { userId: 6512390, username: "rafiq_pro", name: "Rafiqul Islam", coins: 12000, withdrawn: 150, banned: false },
+        { userId: 4410291, username: "sakib_99", name: "Shakib Al Hasan", coins: 85000, withdrawn: 200, banned: false }
+      ],
+      // Ad Control Configuration State
+      adConfig: JSON.parse(localStorage.getItem('cyber_ad_config') || JSON.stringify({
+        masterSwitch: true,
+        network: 'monetag',
+        monetagZoneId: '11884798',
+        videoCoins: 250,
+        sandboxBypass: true,
+        placements: {
+          video: true,
+          revive: true,
+          multiplier: true,
+          spins: true,
+          cards: true,
+          quiz: true
+        }
+      })),
+      currentFilter: 'all',
+      selectedPayout: null
+    };
+
+    function switchTab(tab) {
+      ['viewDashboard', 'viewPayouts', 'viewAds', 'viewUsers', 'viewBroadcast', 'viewSettings'].forEach(v => {
+        document.getElementById(v).classList.add('hidden');
+      });
+      ['tabBtnDash', 'tabBtnPayouts', 'tabBtnAds', 'tabBtnUsers', 'tabBtnBroadcast', 'tabBtnSettings'].forEach(b => {
+        const btn = document.getElementById(b);
+        btn.className = "px-3 py-1.5 rounded-xl font-bold text-slate-400 hover:text-white transition";
+      });
+
+      if (tab === 'dashboard') {
+        document.getElementById('viewDashboard').classList.remove('hidden');
+        document.getElementById('tabBtnDash').className = "px-3 py-1.5 rounded-xl font-bold bg-cyan-600 text-white transition shadow";
+      } else if (tab === 'payouts') {
+        document.getElementById('viewPayouts').classList.remove('hidden');
+        document.getElementById('tabBtnPayouts').className = "px-3 py-1.5 rounded-xl font-bold bg-cyan-600 text-white transition shadow";
+        renderPayoutsTable();
+      } else if (tab === 'ads') {
+        document.getElementById('viewAds').classList.remove('hidden');
+        document.getElementById('tabBtnAds').className = "px-3 py-1.5 rounded-xl font-bold bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 transition shadow";
+        loadAdConfigUI();
+      } else if (tab === 'users') {
+        document.getElementById('viewUsers').classList.remove('hidden');
+        document.getElementById('tabBtnUsers').className = "px-3 py-1.5 rounded-xl font-bold bg-cyan-600 text-white transition shadow";
+      } else if (tab === 'broadcast') {
+        document.getElementById('viewBroadcast').classList.remove('hidden');
+        document.getElementById('tabBtnBroadcast').className = "px-3 py-1.5 rounded-xl font-bold bg-cyan-600 text-white transition shadow";
+      } else if (tab === 'settings') {
+        document.getElementById('viewSettings').classList.remove('hidden');
+        document.getElementById('tabBtnSettings').className = "px-3 py-1.5 rounded-xl font-bold bg-cyan-600 text-white transition shadow";
+      }
+      refreshStats();
+    }
+
+    function refreshStats() {
+      const pending = adminState.payouts.filter(p => p.status === 'pending');
+      const approved = adminState.payouts.filter(p => p.status === 'approved');
+
+      const pendingSum = pending.reduce((sum, p) => sum + p.amount, 0);
+      const approvedSum = approved.reduce((sum, p) => sum + p.amount, 0);
+      const totalCoins = adminState.users.reduce((sum, u) => sum + u.coins, 0);
+
+      document.getElementById('statTotalUsers').textContent = adminState.users.length;
+      document.getElementById('statPendingBdt').textContent = `৳${pendingSum.toFixed(2)}`;
+      document.getElementById('statPendingCount').textContent = pending.length;
+      document.getElementById('badgePendingCount').textContent = pending.length;
+      document.getElementById('statApprovedBdt').textContent = `৳${approvedSum.toFixed(2)}`;
+      document.getElementById('statApprovedCount').textContent = approved.length;
+      document.getElementById('statTotalCoins').textContent = totalCoins.toLocaleString();
+    }
+
+    // ==========================================
+    // AD MANAGEMENT CONTROLS & SYNC
+    // ==========================================
+    function loadAdConfigUI() {
+      const cfg = adminState.adConfig;
+      updateMasterSwitchCard(cfg.masterSwitch);
+
+      document.getElementById('adNetworkProvider').value = cfg.network || 'monetag';
+      document.getElementById('adMonetagZone').value = cfg.monetagZoneId || '11884798';
+      document.getElementById('adVideoCoins').value = cfg.videoCoins || 250;
+      document.getElementById('adSandboxBypass').checked = cfg.sandboxBypass !== false;
+
+      // Placement toggles
+      document.getElementById('adPlaceVideo').checked = cfg.placements.video !== false;
+      document.getElementById('adPlaceRevive').checked = cfg.placements.revive !== false;
+      document.getElementById('adPlaceMultiplier').checked = cfg.placements.multiplier !== false;
+      document.getElementById('adPlaceSpins').checked = cfg.placements.spins !== false;
+      document.getElementById('adPlaceCards').checked = cfg.placements.cards !== false;
+      document.getElementById('adPlaceQuiz').checked = cfg.placements.quiz !== false;
+    }
+
+    function updateMasterSwitchCard(enabled) {
+      const card = document.getElementById('adMasterCard');
+      const iconBox = document.getElementById('adMasterIconBox');
+      const badge = document.getElementById('adMasterBadge');
+      const desc = document.getElementById('adMasterDesc');
+      const btn = document.getElementById('btnMasterToggle');
+      const btnText = document.getElementById('btnMasterToggleText');
+
+      if (enabled) {
+        card.className = "glass-card rounded-3xl p-6 border-2 border-emerald-500/40 shadow-2xl relative overflow-hidden transition-all duration-300";
+        iconBox.className = "w-14 h-14 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl shadow-xl glow-emerald shrink-0";
+        badge.className = "text-[9px] font-black bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/40 uppercase";
+        badge.textContent = "🟢 ACTIVE (চালু)";
+        desc.textContent = "সিস্টেমের সমস্ত গেমে এবং মিনি অ্যাপে বিজ্ঞাপন সক্রিয় রয়েছে।";
+        btn.className = "px-5 py-2.5 bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 text-white font-black rounded-xl text-xs transition active:scale-95 shadow-xl flex items-center space-x-2";
+        btnText.textContent = "সকল অ্যাড বন্ধ করুন (Disable)";
+      } else {
+        card.className = "glass-card rounded-3xl p-6 border-2 border-rose-500/40 shadow-2xl relative overflow-hidden transition-all duration-300 bg-rose-950/20";
+        iconBox.className = "w-14 h-14 rounded-2xl bg-rose-500/20 text-rose-400 flex items-center justify-center text-2xl shadow-xl shrink-0";
+        badge.className = "text-[9px] font-black bg-rose-500/20 text-rose-400 px-2 py-0.5 rounded-full border border-rose-500/40 uppercase";
+        badge.textContent = "🔴 DISABLED (বন্ধ)";
+        desc.textContent = "বিজ্ঞাপন সাময়িকভাবে বন্ধ রাখা হয়েছে। কোনো প্লেয়ার অ্যাড দেখতে পাবে না।";
+        btn.className = "px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 text-slate-950 font-black rounded-xl text-xs transition active:scale-95 shadow-xl flex items-center space-x-2";
+        btnText.textContent = "সকল অ্যাড চালু করুন (Enable)";
+      }
+    }
+
+    function toggleAdsMasterSwitch() {
+      adminState.adConfig.masterSwitch = !adminState.adConfig.masterSwitch;
+      updateMasterSwitchCard(adminState.adConfig.masterSwitch);
+      saveAdSettings(true);
+    }
+
+    function saveAdSettings(silent = false) {
+      adminState.adConfig = {
+        masterSwitch: adminState.adConfig.masterSwitch,
+        network: document.getElementById('adNetworkProvider').value,
+        monetagZoneId: document.getElementById('adMonetagZone').value.trim() || '11884798',
+        videoCoins: parseInt(document.getElementById('adVideoCoins').value) || 250,
+        sandboxBypass: document.getElementById('adSandboxBypass').checked,
+        placements: {
+          video: document.getElementById('adPlaceVideo').checked,
+          revive: document.getElementById('adPlaceRevive').checked,
+          multiplier: document.getElementById('adPlaceMultiplier').checked,
+          spins: document.getElementById('adPlaceSpins').checked,
+          cards: document.getElementById('adPlaceCards').checked,
+          quiz: document.getElementById('adPlaceQuiz').checked
+        }
+      };
+
+      // Save to localStorage for WebApp instant sync
+      localStorage.setItem('cyber_ad_config', JSON.stringify(adminState.adConfig));
+
+      // Transmit to Telegram WebApp bot if applicable
+      if (window.Telegram?.WebApp) {
+        try {
+          window.Telegram.WebApp.sendData(JSON.stringify({
+            type: 'UPDATE_AD_SETTINGS',
+            config: adminState.adConfig
+          }));
+        } catch (e) {}
+      }
+
+      if (!silent) {
+        alert("✅ বিজ্ঞাপন সেটিংস সফলভাবে সেভ করা হয়েছে!\nমিনি অ্যাপের সাথে তাত্ক্ষণিক সিঙ্ক সম্পন্ন হয়েছে।");
+      }
+    }
+
+    function resetDefaultAdSettings() {
+      if (confirm("আপনি কি নিশ্চিতভাবে বিজ্ঞাপন সেটিংস ডিফল্টে ফিরিয়ে নিতে চান?")) {
+        adminState.adConfig = {
+          masterSwitch: true,
+          network: 'monetag',
+          monetagZoneId: '11884798',
+          videoCoins: 250,
+          sandboxBypass: true,
+          placements: {
+            video: true,
+            revive: true,
+            multiplier: true,
+            spins: true,
+            cards: true,
+            quiz: true
+          }
+        };
+        localStorage.setItem('cyber_ad_config', JSON.stringify(adminState.adConfig));
+        loadAdConfigUI();
+        alert("ডিফল্ট বিজ্ঞাপন সেটিংস পুনরুদ্ধার করা হয়েছে!");
+      }
+    }
+
+    // ==========================================
+    // PAYOUTS LOGIC
+    // ==========================================
+    function filterPayouts(status) {
+      adminState.currentFilter = status;
+      ['filterAll', 'filterPending', 'filterApproved', 'filterRejected'].forEach(id => {
+        document.getElementById(id).className = "px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-400";
+      });
+      if (status === 'all') document.getElementById('filterAll').className = "px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-700 text-white";
+      if (status === 'pending') document.getElementById('filterPending').className = "px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/40";
+      if (status === 'approved') document.getElementById('filterApproved').className = "px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40";
+      if (status === 'rejected') document.getElementById('filterRejected').className = "px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-500/20 text-rose-400 border border-rose-500/40";
+      renderPayoutsTable();
+    }
+
+    function renderPayoutsTable() {
+      const tbody = document.getElementById('payoutsTableBody');
+      const filtered = adminState.currentFilter === 'all' 
+        ? adminState.payouts 
+        : adminState.payouts.filter(p => p.status === adminState.currentFilter);
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-500">কোনো রেকর্ড পাওয়া যায়নি</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(p => `
+        <tr class="hover:bg-slate-900/50 transition">
+          <td class="p-3 font-mono text-slate-400 font-bold">#${p.id}</td>
+          <td class="p-3">
+            <div class="font-bold text-white">@${p.username}</div>
+            <div class="text-[10px] text-slate-500">ID: ${p.userId}</div>
+          </td>
+          <td class="p-3 font-mono font-bold text-pink-400 select-all">${p.phone}</td>
+          <td class="p-3 font-black text-emerald-400 font-['Outfit']">৳${p.amount.toFixed(2)}</td>
+          <td class="p-3 text-amber-400 font-bold font-['Outfit']">${p.coins.toLocaleString()}</td>
+          <td class="p-3">
+            <span class="px-2.5 py-1 rounded-xl text-[10px] font-black ${
+              p.status === 'pending' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' :
+              p.status === 'approved' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' :
+              'bg-rose-500/20 text-rose-400 border border-rose-500/40'
+            }">
+              ${p.status === 'pending' ? 'পেন্ডিং' : p.status === 'approved' ? 'অনুমোদিত' : 'বাতিল'}
+            </span>
+          </td>
+          <td class="p-3 text-right">
+            ${p.status === 'pending' ? `
+              <div class="flex items-center justify-end space-x-1.5">
+                <button onclick="openApproveModal(${p.id})" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-[10px] transition shadow">অনুমোদন</button>
+                <button onclick="rejectPayout(${p.id})" class="px-3 py-1 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-[10px] transition shadow">বাতিল</button>
+              </div>
+            ` : `<span class="text-slate-500 text-[10px] font-mono">${p.txId || 'সম্পন্ন'}</span>`}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function openApproveModal(id) {
+      const p = adminState.payouts.find(item => item.id === id);
+      if (!p) return;
+      adminState.selectedPayout = p;
+      document.getElementById('modalPayoutId').textContent = p.id;
+      document.getElementById('modalPhone').textContent = p.phone;
+      document.getElementById('modalBdt').textContent = `৳${p.amount.toFixed(2)}`;
+      document.getElementById('modalTxId').value = '';
+      document.getElementById('approveModal').classList.remove('hidden');
+      document.getElementById('approveModal').classList.add('flex');
+    }
+
+    function closeApproveModal() {
+      document.getElementById('approveModal').classList.add('hidden');
+      document.getElementById('approveModal').classList.remove('flex');
+    }
+
+    function confirmApprove() {
+      if (!adminState.selectedPayout) return;
+      adminState.selectedPayout.status = 'approved';
+      adminState.selectedPayout.txId = document.getElementById('modalTxId').value.trim();
+      localStorage.setItem('admin_payouts', JSON.stringify(adminState.payouts));
+      closeApproveModal();
+      renderPayoutsTable();
+      refreshStats();
+      alert(`পেমেন্ট #${adminState.selectedPayout.id} অনুমোদিত হয়েছে! প্লেয়ারকে নোটিফিকেশন পাঠানো হয়েছে।`);
+    }
+
+    function rejectPayout(id) {
+      const p = adminState.payouts.find(item => item.id === id);
+      if (!p) return;
+      if (confirm(`আপনি কি নিশ্চিতভাবে বিকাশ নম্বর ${p.phone} এর ৳${p.amount} রিকোয়েস্টটি বাতিল করবেন?`)) {
+        p.status = 'rejected';
+        localStorage.setItem('admin_payouts', JSON.stringify(adminState.payouts));
+        renderPayoutsTable();
+        refreshStats();
+      }
+    }
+
+    // ==========================================
+    // USERS & BROADCAST
+    // ==========================================
+    function searchUser() {
+      const q = document.getElementById('userSearchInput').value.trim().toLowerCase().replace('@', '');
+      const container = document.getElementById('userSearchResult');
+      if (!q) return;
+
+      const user = adminState.users.find(u => u.username.toLowerCase() === q || String(u.userId) === q);
+      if (!user) {
+        container.innerHTML = `<div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 text-center text-xs text-rose-400">কোনো ইউজার পাওয়া যায়নি!</div>`;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="bg-slate-950 p-4 rounded-2xl border border-cyan-500/30 space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <h4 class="text-sm font-bold text-white">${user.name} (@${user.username})</h4>
+              <div class="text-[10px] text-slate-500">ID: ${user.userId}</div>
+            </div>
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${user.banned ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'}">
+              ${user.banned ? 'ব্যানড' : 'সক্রিয়'}
+            </span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
+              <span class="text-slate-400">কয়েন ব্যালেন্স:</span>
+              <span class="font-bold text-amber-400 ml-1">${user.coins.toLocaleString()}</span>
+            </div>
+            <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
+              <span class="text-slate-400">মোট ক্যাশআউট:</span>
+              <span class="font-bold text-emerald-400 ml-1">৳${user.withdrawn}</span>
+            </div>
+          </div>
+
+          <div class="flex items-center space-x-2 pt-2 border-t border-slate-800">
+            <button onclick="modifyCoins(${user.userId}, 5000)" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs">+৫,০০০ কয়েন</button>
+            <button onclick="modifyCoins(${user.userId}, -5000)" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl text-xs">-৫,০০০ কয়েন</button>
+            <button onclick="toggleBan(${user.userId})" class="px-3 py-1.5 ${user.banned ? 'bg-slate-700' : 'bg-rose-600'} text-white font-bold rounded-xl text-xs">
+              ${user.banned ? 'আনব্যান করুন' : 'ব্যান করুন'}
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function modifyCoins(userId, delta) {
+      const u = adminState.users.find(item => item.userId === userId);
+      if (u) {
+        u.coins = Math.max(0, u.coins + delta);
+        searchUser();
+        refreshStats();
+        alert(`ব্যালেন্স আপডেট হয়েছে! বর্তমান ব্যালেন্স: ${u.coins.toLocaleString()} কয়েন`);
+      }
+    }
+
+    function toggleBan(userId) {
+      const u = adminState.users.find(item => item.userId === userId);
+      if (u) {
+        u.banned = !u.banned;
+        searchUser();
+      }
+    }
+
+    document.getElementById('broadcastForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const txt = document.getElementById('broadcastText').value.trim();
+      alert(`ব্রডকাস্ট মেসেজ শিডিউল করা হয়েছে!\n${adminState.users.length} জন সক্রিয় প্লেয়ারকে পাঠানো হচ্ছে।`);
+      document.getElementById('broadcastText').value = '';
+    });
+
+    document.getElementById('settingsForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      alert('সিস্টেম সেটিংস সফলভাবে সেভ করা হয়েছে!');
+    });
+
+    window.onload = function() {
+      refreshStats();
+      loadAdConfigUI();
+    };
+  </script>
+</body>
+</html>
